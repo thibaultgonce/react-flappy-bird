@@ -1,8 +1,8 @@
-import React from 'react';
-import { findDOMNode } from 'react-dom';
-import { View } from 'react-native';
+import React from "react";
+import { findDOMNode } from "react-dom";
+import { View } from "react-native";
 
-const getElement = component => {
+const getElement = (component) => {
   try {
     return findDOMNode(component);
   } catch (e) {
@@ -10,15 +10,15 @@ const getElement = component => {
   }
 };
 
-const freezeBody = e => {
+const freezeBody = (e) => {
   e.preventDefault();
 };
 
 class DisableBodyScrollingView extends React.PureComponent {
   componentWillUnmount() {
     if (this.view) {
-      this.view.removeEventListener('touchstart', freezeBody, false);
-      this.view.removeEventListener('touchmove', freezeBody, false);
+      this.view.removeEventListener("touchstart", freezeBody, false);
+      this.view.removeEventListener("touchmove", freezeBody, false);
     }
   }
 
@@ -29,15 +29,15 @@ class DisableBodyScrollingView extends React.PureComponent {
       <View
         style={[{ flex: 1 }, style]}
         tabIndex="0"
-        ref={view => {
+        ref={(view) => {
           const nextView = getElement(view);
           if (nextView && nextView.addEventListener) {
-            nextView.addEventListener('touchstart', freezeBody, false);
-            nextView.addEventListener('touchmove', freezeBody, false);
+            nextView.addEventListener("touchstart", freezeBody, false);
+            nextView.addEventListener("touchmove", freezeBody, false);
           }
           if (this.view && this.view.removeEventListener) {
-            this.view.removeEventListener('touchstart', freezeBody, false);
-            this.view.removeEventListener('touchmove', freezeBody, false);
+            this.view.removeEventListener("touchstart", freezeBody, false);
+            this.view.removeEventListener("touchmove", freezeBody, false);
           }
           this.view = nextView;
         }}

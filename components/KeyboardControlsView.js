@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 class KeyboardControlsView extends React.PureComponent {
   static defaultProps = {
@@ -7,19 +7,20 @@ class KeyboardControlsView extends React.PureComponent {
   };
 
   componentDidMount() {
-    window.addEventListener('keydown', this.onKeyDown, false);
-    window.addEventListener('keyup', this.onKeyUp, false);
-  }
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown);
-    window.removeEventListener('keyup', this.onKeyUp);
+    window.addEventListener("keydown", this.onKeyDown, false);
+    window.addEventListener("keyup", this.onKeyUp, false);
   }
 
-  onKeyDown = e => {
+  componentWillUnmount() {
+    window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("keyup", this.onKeyUp);
+  }
+
+  onKeyDown = (e) => {
     this.props.onKeyDown(e);
   };
 
-  onKeyUp = e => {
+  onKeyUp = (e) => {
     this.props.onKeyUp(e);
   };
 

@@ -1,27 +1,38 @@
-import { PIXI } from 'expo-pixi';
-import { Container, extras, Sprite } from 'pixi.js';
-import { AsyncStorage, PixelRatio } from 'react-native';
+import { PIXI } from "expo-pixi";
+import { Container, extras, Sprite } from "pixi.js";
+import { AsyncStorage, PixelRatio } from "react-native";
 
-import source from '../assets/spritesheet.png';
-import setupSpriteSheetAsync from './setupSpriteSheetAsync';
-import sprites from './sprites';
+import source from "../assets/spritesheet.png";
+import setupSpriteSheetAsync from "./setupSpriteSheetAsync";
+import sprites from "./sprites";
 
 const { TilingSprite, AnimatedSprite } = extras;
 
 const scale = PixelRatio.get();
 
-const Settings = {
-  playerFallSpeed: 8 * scale,
+console.log("scale", scale);
+
+const movFactor = 3;
+
+let Settings = {
+  // position
   playerHorizontalPosition: 100 * scale,
   playerVerticalPosition: 200 * scale,
-  playerMaxVelocity: -3 * scale,
+
+  // dimensions
   pipeWidth: 80 * scale,
-  groundHeight: 100 * scale,
   pipeHeight: 500 * scale,
-  playerGravity: 0.4 * scale,
   minPipeHeight: 50 * scale,
   pipeVerticalGap: 190 * scale, //180 is pretty legit
+  groundHeight: 100 * scale,
+
+  // movement
+  playerFallSpeed: 8 * scale, //* movFactor,
+  playerGravity: 0.4 * scale, //* movFactor * 3,
   gameSpeed: 40 * 0.25,
+
+  // useless
+  playerMaxVelocity: -3 * scale,
 };
 
 class FlappySprite extends Sprite {
@@ -35,18 +46,17 @@ class Ground extends TilingSprite {
   constructor(texture) {
     super(texture, Settings.width, Settings.groundHeight);
     this.tileScale.set(scale * 2);
-    this.position.x = 0;
-    this.position.y = Settings.skyHeight;
+    this.position.x = Settings.width;
+    this.position.y = Settings.height;
   }
 }
 
-class Background extends FlappySprite {
+class Background extends TilingSprite {
   constructor(texture) {
-    super(texture);
+    super(texture, Settings.width, Settings.height);
+    this.tileScale.set(scale * 4);
     this.position.x = 0;
     this.position.y = 0;
-    this.width = Settings.width;
-    this.height = Settings.height;
   }
 }
 
@@ -65,6 +75,7 @@ function boxesIntersect(a, b, paddingA = 0) {
     ab.y < bb.y + bb.height
   );
 }
+
 class PipeContainer extends Container {
   pipes = [];
   pipeIndex = 0;
@@ -94,7 +105,7 @@ class PipeContainer extends Container {
     return score;
   };
 
-  tryScoringPipe = index => {
+  tryScoringPipe = (index) => {
     const group = this.pipes[index];
 
     if (
@@ -107,7 +118,7 @@ class PipeContainer extends Container {
     return false;
   };
 
-  move = index => {
+  move = (index) => {
     const { pipe, pipe2 } = this.pipes[index];
     pipe.position.x -= Settings.gameSpeed;
     pipe2.position.x -= Settings.gameSpeed;
@@ -127,7 +138,7 @@ class PipeContainer extends Container {
     const minPosition = -(pipe.height / 2 - Settings.minPipeHeight);
 
     pipe.position.y = Math.floor(
-      Math.random() * (maxPosition - minPosition + 1) + minPosition,
+      Math.random() * (maxPosition - minPosition + 1) + minPosition
     );
 
     pipe2.position.y = pipe.height + pipe.position.y + Settings.pipeVerticalGap;
@@ -159,7 +170,7 @@ class PipeContainer extends Container {
     pipe2.position.x = x;
   };
 
-  getX = index => {
+  getX = (index) => {
     const { pipe } = this.pipes[index];
     return this.toGlobal(pipe.position).x;
   };
@@ -208,7 +219,7 @@ class Bird extends AnimatedSprite {
     const FLAP = 35;
     this.rotation = -Math.min(
       Math.PI / 4,
-      Math.max(-Math.PI / 2, (FLAP + this.speedY) / FLAP),
+      Math.max(-Math.PI / 2, (FLAP + this.speedY) / FLAP)
     );
   };
 }
@@ -218,8 +229,15 @@ class Game {
   isStarted = false;
   isDead = false;
   score = 0;
+  context = null;
 
-  constructor(context) {
+  constructor(context, gameSettings) {
+    this.context = context;
+    Settings = gameSettings;
+    this.createGame(context);
+  }
+
+  createGame = (context) => {
     // Sharp pixels
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
@@ -231,11 +249,11 @@ class Game {
     });
     this.app.ticker.add(this.animate);
     /*
-    this.app.stage.interactive = true;
-    this.app.stage.buttonMode = true;
-    this.app.stage.on('mousedown', this.beginGame);
-    this.app.stage.on('tap', this.beginGame);
-    */
+        this.app.stage.interactive = true;
+        this.app.stage.buttonMode = true;
+        this.app.stage.on('mousedown', this.beginGame);
+        this.app.stage.on('tap', this.beginGame);
+        */
 
     Settings.width = this.app.renderer.width;
     Settings.pipeScorePosition = -(
@@ -245,7 +263,7 @@ class Game {
     Settings.skyHeight = Settings.height - Settings.groundHeight;
     Settings.pipeHorizontalGap = Settings.pipeWidth * 5;
     this.loadAsync();
-  }
+  };
 
   // Resize function window
   resize = ({ width, height, scale }) => {
@@ -259,6 +277,16 @@ class Game {
     // }
   };
 
+  refresh = async () => {
+    this.app.stage.removeChildren();
+    this.loadAsync();
+  };
+
+  setSettings = async (settings) => {
+    Settings = settings;
+    await this.refresh();
+  };
+
   loadAsync = async () => {
     this.textures = await setupSpriteSheetAsync(source, sprites);
     this.onAssetsLoaded();
@@ -270,14 +298,14 @@ class Game {
     this.ground = new Ground(this.textures.ground);
 
     this.bird = new Bird([
-      this.textures['bird_000'],
-      this.textures['bird_001'],
-      this.textures['bird_002'],
-      this.textures['bird_001'],
+      this.textures["bird_000"],
+      this.textures["bird_001"],
+      this.textures["bird_002"],
+      this.textures["bird_001"],
     ]);
 
-    [this.background, this.pipeContainer, this.ground, this.bird].map(child =>
-      this.app.stage.addChild(child),
+    [this.background, this.pipeContainer, this.ground, this.bird].map((child) =>
+      this.app.stage.addChild(child)
     );
 
     this.stopAnimating = false;
@@ -310,7 +338,11 @@ class Game {
       if (Math.abs(this.ground.tilePosition.x) > this.ground.width) {
         this.ground.tilePosition.x = 0;
       }
+      if (Math.abs(this.background.tilePosition.x) > this.background.width) {
+        this.background.tilePosition.x = 0;
+      }
       this.ground.tilePosition.x -= Settings.gameSpeed;
+      this.background.tilePosition.x -= Settings.gameSpeed;
     }
 
     if (this.isStarted) {
@@ -377,7 +409,7 @@ class Game {
 async function saveHighScoreAsync(score) {
   const highScore = await getHighScoreAsync();
   if (score > highScore) {
-    await AsyncStorage.setItem('hiscore', highScore);
+    await AsyncStorage.setItem("hiscore", highScore);
   }
   return {
     score: Math.max(score, highScore),
@@ -386,7 +418,7 @@ async function saveHighScoreAsync(score) {
 }
 
 async function getHighScoreAsync() {
-  const score = await AsyncStorage.getItem('hiscore');
+  const score = await AsyncStorage.getItem("hiscore");
   if (score) {
     return parseInt(score);
   }

@@ -1,5 +1,7 @@
-import { PIXI } from 'expo-pixi';
+import { PIXI } from "expo-pixi";
+
 const { Rectangle, Texture } = PIXI;
+
 async function setupSpriteSheetAsync(resource, spriteSheet) {
   const texture = await Texture.fromExpoAsync(resource);
 

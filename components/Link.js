@@ -1,6 +1,6 @@
-import { Linking } from 'expo';
-import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { Linking } from "expo";
+import React from "react";
+import { TouchableOpacity } from "react-native";
 
 export default ({ url, onPress, ...props }) => (
   <TouchableOpacity

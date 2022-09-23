@@ -6,9 +6,11 @@
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
+    "dev": "expo build:web & serve ./web-build",
     "serve": "serve ./web-build",
     "prepublish:web": "expo build:web",
-    "publish:web": "netlify deploy"
+    "publish:web": "netlify deploy",
+    "format": "yarn prettier --write ."
   },
   "dependencies": {
     "expo": "^33.0.0-alpha.web.1",
@@ -20,6 +22,9 @@
   },
   "devDependencies": {
     "babel-preset-expo": "^5.1.1",
+    "prettier": "2.7.1",
     "serve": "^11.0.0"
-  }
+  },
+  "repository": "https://github.com/EvanBacon/react-flappy-bird.git",
+  "license": "MIT"
 }
